@@ -1,0 +1,1 @@
+g++ src/*.cpp -Iinclude -o bin/virtualDisk && .bin/virtualDisk
