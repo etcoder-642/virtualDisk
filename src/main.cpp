@@ -23,8 +23,7 @@ enum class CommandCode
     UNKNOWN
 };
 
-int
-main()
+int main()
 {
     auto root = make_shared<virtualFolder>("root", nullptr);
     virtualFolder *cwd = root.get();
@@ -44,25 +43,29 @@ main()
         {"change-directory", CommandCode::CD},
         {"create-file", CommandCode::TOUCH},
         {"remove", CommandCode::RM},
-        {"concatenate", CommandCode::CAT}
-    };
-    string userChoice;
+        {"concatenate", CommandCode::CAT}};
+    CommandCode code = CommandCode::UNKNOWN;
     initialPage();
 
-    cout << "~/home$ ";
-    while (getline(cin, userChoice))
+    string userChoice;
+
+    displayCurrentPath(cwd->buildAncestorsList(cwd));
+    while (code != CommandCode::EXIT && getline(cin, userChoice))
     {
-        vector<string> parts = parseInputs(userChoice);
+        vector<string> parts = parseInputs(userChoice, ' ');
         if (parts.empty())
+        {
+            displayCurrentPath(cwd->buildAncestorsList(cwd));
             continue;
+        }
 
         string cmd = parts[0];
 
         vector<string> args(parts.begin() + 1, parts.end());
 
-        CommandCode code = commandMap.count(cmd) ? commandMap[cmd] : CommandCode::UNKNOWN;
+        code = commandMap.count(cmd) ? commandMap[cmd] : CommandCode::UNKNOWN;
 
-    switch (code)
+        switch (code)
         {
         case CommandCode::MKDIR:
         {
@@ -71,9 +74,51 @@ main()
         }
         break;
         case CommandCode::LS:
-            break;
+        {
+            vector<string> list = cwd->getContentNames();
+            handlelistContents(list);
+        }
+        break;
         case CommandCode::CD:
-            break;
+        {
+            vector<string> actionList = parseInputs(args[0], '/');
+            for (int i = 0; i < actionList.size(); i++)
+            {
+                if (actionList[i] == "..")
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        if (cwd->getParentNode() == nullptr)
+                        {
+                            cout << "You're on the root folder!!!";
+                            break;
+                        }
+                        cwd = static_cast<virtualFolder*>(cwd->getParentNode());
+                    }
+                }
+                else if(actionList[i] == ".")
+                {
+                    if (cwd->getParentNode() == nullptr)
+                    {
+                        cout << "You're on the root folder!!!";
+                        break;
+                    }
+                    cwd = static_cast<virtualFolder*>(cwd->getParentNode());
+                }
+                else if(actionList[i] == "~")
+                {
+                    cwd = root.get();
+                }
+                else
+                {
+                    if (cwd->checkFolderExistence(actionList[i]))
+                    {
+                        cwd = static_cast<virtualFolder*>(cwd->getPointerFromName(actionList[i]).get());
+                    }
+                }
+            }
+        }
+        break;
         case CommandCode::TOUCH:
             break;
         case CommandCode::RM:
@@ -85,10 +130,17 @@ main()
         case CommandCode::EXIT:
             break;
         default:
-            for(int i = 0; i < parts.size(); i++) cout << parts[i];
-            cout << endl << parts[0] << endl;
+            for (int i = 0; i < parts.size(); i++)
+                cout << parts[i];
+            cout << endl
+                 << parts[0] << endl;
             cout << "Unknown command: " << cmd << ". Type 'help' for a list of commands." << endl;
             break;
         }
+    }
+
+    if (code != CommandCode::EXIT)
+    {
+        displayCurrentPath(cwd->buildAncestorsList(cwd));
     }
 }

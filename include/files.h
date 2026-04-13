@@ -35,11 +35,14 @@ public:
     virtual ~FileSystemEntity() = default;
     string getCreatedAt() const { return createdAt; }
     string getModifiedAt() const { return modifiedAt; }
+    auto getParentNode() const { return parent; }
+    string getName() const { return name; }
 
     void setName(string newName) { name = newName; }
     void setCreatedAt(string newCreatedAt) { createdAt = newCreatedAt; }
     void setModifiedAt(string newModifiedAt) { modifiedAt = newModifiedAt; }
-    virtual string getName() = 0;
+    
+    virtual bool isFolder() const = 0;
 };
 
 class virtualFile : public FileSystemEntity
@@ -53,10 +56,11 @@ public:
     virtualFile(string content, string name, FileSystemEntity *parent, string type = "txt")
         : content(content), FileSystemEntity(name, parent), type(type), size(content.size()) {}
 
-    string getName() override { return name; }
     string getContent() const { return content; }
     long long getSize() const { return size; }
     string getType() const { return type; }
+
+    bool isFolder() const override { return false; }
 
     void setContent(string newContent)
     {
@@ -81,9 +85,10 @@ public:
     virtualFolder(string name, FileSystemEntity *parent)
         : FileSystemEntity(name, parent), totalSize(0), memberCount(0) {}
 
-    string getName() override { return name; }
     long long getTotalSize() const { return totalSize; }
     int getMemberCount() const { return memberCount; }
+    bool isFolder() const override { return true; }
+
     vector<shared_ptr<FileSystemEntity>> getContents() const { return contents; }
     vector<string> getContentNames() const
     {
@@ -98,6 +103,9 @@ public:
     shared_ptr<virtualFile> createFile(string content, string name, string type);
     void addEntity(shared_ptr<FileSystemEntity> entity);
     shared_ptr<virtualFolder> createFolder(string name);
+    vector<string> buildAncestorsList(FileSystemEntity *initialNode);
+    bool checkFolderExistence(string folderName);
+    shared_ptr<FileSystemEntity> getPointerFromName(string name);
 };
 
 #endif

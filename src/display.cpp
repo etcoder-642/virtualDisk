@@ -32,3 +32,13 @@ void displaySpecialMessage(string message)
     cout << string(80, '=') << endl;
     cout << endl;
 }
+
+void displayCurrentPath(vector<string> ancestors)
+{
+    string path = "~";
+    for (string ancestor : ancestors)
+    {
+        path += "/" + ancestor;
+    }
+    cout << path << "$ ";
+}

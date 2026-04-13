@@ -11,5 +11,6 @@ using namespace std;
 void initialPage();
 void displaySpecialMessage(string message);
 void handlelistContents(vector<string> names);
+void displayCurrentPath(vector<string> ancestors);
 
 #endif
