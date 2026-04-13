@@ -86,26 +86,19 @@ int main()
             {
                 if (actionList[i] == "..")
                 {
-                    for (int i = 0; i < 2; i++)
-                    {
-                        if (cwd->getParentNode() == nullptr)
-                        {
-                            cout << "You're on the root folder!!!";
-                            break;
-                        }
-                        cwd = static_cast<virtualFolder*>(cwd->getParentNode());
-                    }
-                }
-                else if(actionList[i] == ".")
-                {
                     if (cwd->getParentNode() == nullptr)
                     {
                         cout << "You're on the root folder!!!";
                         break;
                     }
-                    cwd = static_cast<virtualFolder*>(cwd->getParentNode());
+                    cwd = static_cast<virtualFolder *>(cwd->getParentNode());
                 }
-                else if(actionList[i] == "~")
+                else if (actionList[i] == ".")
+                {
+                    displayCurrentPath(cwd->buildAncestorsList(cwd));
+                    continue;
+                }
+                else if (actionList[i] == "~")
                 {
                     cwd = root.get();
                 }
@@ -113,7 +106,7 @@ int main()
                 {
                     if (cwd->checkFolderExistence(actionList[i]))
                     {
-                        cwd = static_cast<virtualFolder*>(cwd->getPointerFromName(actionList[i]).get());
+                        cwd = static_cast<virtualFolder *>(cwd->getPointerFromName(actionList[i]).get());
                     }
                 }
             }
@@ -137,10 +130,9 @@ int main()
             cout << "Unknown command: " << cmd << ". Type 'help' for a list of commands." << endl;
             break;
         }
-    }
-
-    if (code != CommandCode::EXIT)
-    {
-        displayCurrentPath(cwd->buildAncestorsList(cwd));
+        if (code != CommandCode::EXIT)
+        {
+            displayCurrentPath(cwd->buildAncestorsList(cwd));
+        }
     }
 }
