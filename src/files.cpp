@@ -2,19 +2,27 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "files.h"
 
 using namespace std;
 
-void virtualFile::createFile(string content, string name, string createdAt, string modifiedAt, long long size, string type, virtualFolder& folder)
+shared_ptr<virtualFile> virtualFolder::createFile(string content, string name, string type)
 {
-    virtualFile newFile(content, name, createdAt, modifiedAt, size, type);
-    folder.push_back(newFile);
+    auto fileptr = make_shared<virtualFile>(content, name, this, type);
+    this->addEntity(fileptr);
+    return fileptr;
 }
 
-void virtualFolder::createFolder(string path, virtualFolder& folder)
+void virtualFolder::addEntity(shared_ptr<FileSystemEntity> entity) {
+    contents.push_back(entity);
+    memberCount++;
+}
+
+shared_ptr<virtualFolder> virtualFolder::createFolder(string name)
 {
-    virtualFolder newFolder(path);
-    folder.push_back(newFolder);
+    auto folderptr = make_shared<virtualFolder>(name, this);
+    this->addEntity(folderptr);
+    return folderptr;
 }

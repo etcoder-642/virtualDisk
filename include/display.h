@@ -8,6 +8,8 @@
 #include "files.h"
 using namespace std;
 
-void initialPage(string& userChoice);
+void initialPage();
+void displaySpecialMessage(string message);
+void handlelistContents(vector<string> names);
 
 #endif
