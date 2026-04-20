@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include "files.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -44,7 +45,7 @@ vector<string> virtualFolder::buildAncestorsList(FileSystemEntity *initialNode)
 
 bool virtualFolder::checkFolderExistence(string folderName)
 {
-    for(int i = 0; i < contents.size(); i++)
+    for(size_t i = 0; i < contents.size(); i++)
     {
         if(contents[i]->isFolder())
         {
@@ -67,4 +68,37 @@ shared_ptr<FileSystemEntity> virtualFolder::getPointerFromName(string name)
         }
     }
     return nullptr;
+}
+
+virtualFolder* FileSystem::changeDirectory(string path)
+{
+    vector<string> actionList = parseInputs(path, '/');
+    for (size_t i = 0; i < actionList.size(); i++)
+    {
+        if (actionList[i] == "..")
+        {
+            if (cwd->getParentNode() == nullptr)
+            {
+                cout << "You're on the root folder!!!";
+                break;
+            }
+            cwd = static_cast<virtualFolder *>(cwd->getParentNode());
+        }
+        else if (actionList[i] == ".")
+        {
+            continue;
+        }
+        else if (actionList[i] == "~")
+        {
+            cwd = root.get();
+        }
+        else
+        {
+            if (cwd->checkFolderExistence(actionList[i]))
+            {
+                cwd = static_cast<virtualFolder *>(cwd->getPointerFromName(actionList[i]).get());
+            }
+        }
+    }
+    return cwd;
 }

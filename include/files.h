@@ -108,4 +108,23 @@ public:
     shared_ptr<FileSystemEntity> getPointerFromName(string name);
 };
 
+
+class FileSystem {
+private:
+    shared_ptr<virtualFolder> root;
+    virtualFolder* cwd;
+public:
+    FileSystem() {
+        root = make_shared<virtualFolder>("root", nullptr);
+        cwd = root.get();
+    }
+    shared_ptr<virtualFolder> getRoot() const { return root; }
+    virtualFolder* getCWD() const { return cwd; }
+
+    void setCWD(virtualFolder* newCWD){
+        cwd = newCWD;
+    }
+    virtualFolder* changeDirectory(string path);
+};
+
 #endif

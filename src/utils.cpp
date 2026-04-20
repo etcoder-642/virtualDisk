@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 
+#include "../include/files.h"
 using namespace std;
 
 vector<string> parseInputs(string input, char identifier)
@@ -11,7 +12,7 @@ vector<string> parseInputs(string input, char identifier)
     vector<string> res;
     string r = "";
 
-    for (int i = 0; i < input.size(); i++)
+    for (size_t i = 0; i < input.size(); i++)
     {
         if (input[i] != identifier)
         {
@@ -38,3 +39,4 @@ vector<string> parseInputs(string input, char identifier)
 
     return res;
 }
+

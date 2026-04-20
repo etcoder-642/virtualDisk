@@ -25,8 +25,11 @@ enum class CommandCode
 
 int main()
 {
-    auto root = make_shared<virtualFolder>("root", nullptr);
-    virtualFolder *cwd = root.get();
+    FileSystem fs;
+    auto root = fs.getRoot();
+    virtualFolder *cwd = fs.getCWD();
+
+    
 
     map<string, CommandCode> commandMap = {
         {"mkdir", CommandCode::MKDIR},
@@ -69,47 +72,60 @@ int main()
         {
         case CommandCode::MKDIR:
         {
-            auto folderptr = cwd->createFolder(args[0]);
-            displaySpecialMessage(args[0] + " Folder Created successfully!!!");
+            for (string str: args)
+            {
+                cwd->createFolder(str);
+                displaySpecialMessage(str + " Folder Created successfully!!!");
+            }
         }
         break;
         case CommandCode::LS:
         {
-            vector<string> list = cwd->getContentNames();
+            vector<string> list;
+            if(args.empty()){
+            list = cwd->getContentNames();
+            }else {
+                if(cwd->checkFolderExistence(args[0])){
+
+                }else {
+                    displaySpecialMessage("");
+                }
+            }
             handlelistContents(list);
         }
         break;
         case CommandCode::CD:
         {
-            vector<string> actionList = parseInputs(args[0], '/');
-            for (int i = 0; i < actionList.size(); i++)
-            {
-                if (actionList[i] == "..")
-                {
-                    if (cwd->getParentNode() == nullptr)
-                    {
-                        cout << "You're on the root folder!!!";
-                        break;
-                    }
-                    cwd = static_cast<virtualFolder *>(cwd->getParentNode());
-                }
-                else if (actionList[i] == ".")
-                {
-                    displayCurrentPath(cwd->buildAncestorsList(cwd));
-                    continue;
-                }
-                else if (actionList[i] == "~")
-                {
-                    cwd = root.get();
-                }
-                else
-                {
-                    if (cwd->checkFolderExistence(actionList[i]))
-                    {
-                        cwd = static_cast<virtualFolder *>(cwd->getPointerFromName(actionList[i]).get());
-                    }
-                }
-            }
+            cwd = static_cast<virtualFolder *>(fs.changeDirectory(args[0]));
+            fs.setCWD(cwd);
+            // vector<string> actionList = parseInputs(args[0], '/');
+            // for (size_t i = 0; i < actionList.size(); i++)
+            // {
+            //     if (actionList[i] == "..")
+            //     {
+            //         if (cwd->getParentNode() == nullptr)
+            //         {
+            //             cout << "You're on the root folder!!!";
+            //             break;
+            //         }
+            //         cwd = static_cast<virtualFolder *>(cwd->getParentNode());
+            //     }
+            //     else if (actionList[i] == ".")
+            //     {
+            //         continue;
+            //     }
+            //     else if (actionList[i] == "~")
+            //     {
+            //         cwd = root.get();
+            //     }
+            //     else
+            //     {
+            //         if (cwd->checkFolderExistence(actionList[i]))
+            //         {
+            //             cwd = static_cast<virtualFolder *>(cwd->getPointerFromName(actionList[i]).get());
+            //         }
+            //     }
+            // }
         }
         break;
         case CommandCode::TOUCH:
@@ -123,7 +139,7 @@ int main()
         case CommandCode::EXIT:
             break;
         default:
-            for (int i = 0; i < parts.size(); i++)
+            for (size_t i = 0; i < parts.size(); i++)
                 cout << parts[i];
             cout << endl
                  << parts[0] << endl;
