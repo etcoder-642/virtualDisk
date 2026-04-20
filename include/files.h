@@ -52,6 +52,8 @@ private:
     string type;
     long long size;
 
+    static vector<string> validTypes;
+
 public:
     virtualFile(string content, string name, FileSystemEntity *parent, string type = "txt")
         : content(content), FileSystemEntity(name, parent), type(type), size(content.size()) {}
@@ -72,6 +74,8 @@ public:
     {
         type = newType;
     }
+    static void registerFileType(string str);
+    static bool checkFileTypeExistence(string str);
 };
 
 class virtualFolder : public FileSystemEntity
@@ -100,6 +104,8 @@ public:
         return res;
     }
 
+    vector<string> getFoldersName() const;
+    vector<string> getFilesName() const;
     shared_ptr<virtualFile> createFile(string content, string name, string type);
     void addEntity(shared_ptr<FileSystemEntity> entity);
     shared_ptr<virtualFolder> createFolder(string name);

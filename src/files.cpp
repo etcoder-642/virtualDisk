@@ -10,6 +10,27 @@
 
 using namespace std;
 
+vector<string> virtualFile::validTypes = {
+    "txt", "json", "xml", "dat", "cfg", "save",
+    "png", "jpg", "wav", "ogg", "mp3", "mp4",
+    "lvl", "map", "log", "tmp", "pdf", "zip"
+};
+
+void virtualFile::registerFileType(string str)
+{
+    if (find(validTypes.begin(), validTypes.end(), str) == validTypes.end())
+    {
+        validTypes.push_back(str);
+    }
+}
+
+bool virtualFile::checkFileTypeExistence(string str)
+{
+    for(size_t i = 0;i < validTypes.size(); i++){
+        if(str == validTypes[i]) return true;
+    }
+    return false;
+}
 shared_ptr<virtualFile> virtualFolder::createFile(string content, string name, string type)
 {
     auto fileptr = make_shared<virtualFile>(content, name, this, type);
@@ -30,10 +51,36 @@ shared_ptr<virtualFolder> virtualFolder::createFolder(string name)
     return folderptr;
 }
 
+vector<string> virtualFolder::getFoldersName() const
+{
+    vector<string> res;
+    for (const auto &s : contents)
+    {
+        if (s->isFolder())
+        {
+            res.push_back(s->getName());
+        }
+    }
+    return res;
+}
+
+vector<string> virtualFolder::getFilesName() const
+{
+    vector<string> res;
+    for (const auto &s : contents)
+    {
+        if (!(s->isFolder()))
+        {
+            res.push_back(s->getName());
+        }
+    }
+    return res;
+}
+
 vector<string> virtualFolder::buildAncestorsList(FileSystemEntity *initialNode)
 {
     vector<string> res;
-    FileSystemEntity* node = initialNode;
+    FileSystemEntity *node = initialNode;
     while (node != nullptr)
     {
         res.push_back(node->getName());
@@ -45,11 +92,11 @@ vector<string> virtualFolder::buildAncestorsList(FileSystemEntity *initialNode)
 
 bool virtualFolder::checkFolderExistence(string folderName)
 {
-    for(size_t i = 0; i < contents.size(); i++)
+    for (size_t i = 0; i < contents.size(); i++)
     {
-        if(contents[i]->isFolder())
+        if (contents[i]->isFolder())
         {
-            if(contents[i]->getName() == folderName)
+            if (contents[i]->getName() == folderName)
             {
                 return true;
             }
@@ -60,9 +107,9 @@ bool virtualFolder::checkFolderExistence(string folderName)
 
 shared_ptr<FileSystemEntity> virtualFolder::getPointerFromName(string name)
 {
-    for(const auto& entity: contents)
+    for (const auto &entity : contents)
     {
-        if(entity->getName() == name)
+        if (entity->getName() == name)
         {
             return entity;
         }
@@ -70,7 +117,7 @@ shared_ptr<FileSystemEntity> virtualFolder::getPointerFromName(string name)
     return nullptr;
 }
 
-virtualFolder* FileSystem::changeDirectory(string path)
+virtualFolder *FileSystem::changeDirectory(string path)
 {
     vector<string> actionList = parseInputs(path, '/');
     for (size_t i = 0; i < actionList.size(); i++)

@@ -83,7 +83,7 @@ int main()
         {
             vector<string> list;
             if(args.empty()){
-            list = cwd->getContentNames();
+                list = cwd->getContentNames();
             }else {
                 if(cwd->checkFolderExistence(args[0])){
 
@@ -98,37 +98,20 @@ int main()
         {
             cwd = static_cast<virtualFolder *>(fs.changeDirectory(args[0]));
             fs.setCWD(cwd);
-            // vector<string> actionList = parseInputs(args[0], '/');
-            // for (size_t i = 0; i < actionList.size(); i++)
-            // {
-            //     if (actionList[i] == "..")
-            //     {
-            //         if (cwd->getParentNode() == nullptr)
-            //         {
-            //             cout << "You're on the root folder!!!";
-            //             break;
-            //         }
-            //         cwd = static_cast<virtualFolder *>(cwd->getParentNode());
-            //     }
-            //     else if (actionList[i] == ".")
-            //     {
-            //         continue;
-            //     }
-            //     else if (actionList[i] == "~")
-            //     {
-            //         cwd = root.get();
-            //     }
-            //     else
-            //     {
-            //         if (cwd->checkFolderExistence(actionList[i]))
-            //         {
-            //             cwd = static_cast<virtualFolder *>(cwd->getPointerFromName(actionList[i]).get());
-            //         }
-            //     }
-            // }
         }
         break;
         case CommandCode::TOUCH:
+        {
+            vector<string> rn;
+            for(string str: args){
+                rn = parseInputs(str, '.');
+                if(virtualFile::checkFileTypeExistence(rn[1])){
+                    cwd->createFile("", rn[0], rn[1]);
+                    displaySpecialMessage(str + "File was created");
+                }
+            }
+
+        }
             break;
         case CommandCode::RM:
             break;
