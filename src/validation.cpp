@@ -33,7 +33,7 @@ bool Validator::checkEmpty(vector<string> list) { return list.empty() ? false : 
 bool Validator::syntaxCheckerInput(vector<string>& str)
 {
     if(str.empty()){
-        ERROR_MESSAGE = "No Command Provided";
+        ERROR_MESSAGE = "Error:No Command Provided";
         SUGGESTION = "Type `help` to see list of all commands.";
         return false;
     }
@@ -42,7 +42,7 @@ bool Validator::syntaxCheckerInput(vector<string>& str)
         if(allCommands[i] == str[0]) checkCommand++;
     }
     if(!checkCommand){
-        ERROR_MESSAGE = "Command Not Recognized";
+        ERROR_MESSAGE = "Error: Command Not Recognized";
         SUGGESTION = "Type `help` to see list of all commands.";
         return false;
     }
@@ -51,11 +51,12 @@ bool Validator::syntaxCheckerInput(vector<string>& str)
 
 bool Validator::syntaxCheckerMKDIR(vector<string>& str)
 {
-    if(str.size() == 1){
-        ERROR_MESSAGE = "Not enough Arguments Provided.";
+    if(str.empty()){
+        ERROR_MESSAGE = "Error: Not enough Arguments Provided.";
         SUGGESTION = "Provide folder names to create a folder.";
         return false;
     }
+    return true;
 }
 
 bool Validator::isValidName(const std::string& name) 

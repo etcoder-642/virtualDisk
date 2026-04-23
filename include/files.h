@@ -106,9 +106,9 @@ public:
 
     vector<string> getFoldersName() const;
     vector<string> getFilesName() const;
-    shared_ptr<virtualFile> createFile(string content, string name, string type);
+    shared_ptr<virtualFile> createFile(string content, string name, string type, Validator INPUT_VALIDATOR);
     void addEntity(shared_ptr<FileSystemEntity> entity);
-    shared_ptr<virtualFolder> createFolder(string name);
+    shared_ptr<virtualFolder> createFolder(string name, Validator INPUT_VALIDATOR);
     vector<string> buildAncestorsList(FileSystemEntity *initialNode);
     bool checkFolderExistence(string folderName);
     shared_ptr<FileSystemEntity> getPointerFromName(string name);
@@ -131,6 +131,7 @@ public:
         cwd = newCWD;
     }
     virtualFolder* changeDirectory(string path);
+    virtualFolder* traverseTree(string path);
 };
 
 #endif

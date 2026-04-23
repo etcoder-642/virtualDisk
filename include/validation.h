@@ -14,6 +14,9 @@ private:
 public:
     Validator() : ERROR_MESSAGE("Invalid input. Please try again.") {}
     string getErrorMessage() const { return ERROR_MESSAGE; }
+    string getSuggestion() const { return SUGGESTION; }
+    void setErrorMessage(string message) { ERROR_MESSAGE = message; }
+    void setSuggestion(string suggestion) { SUGGESTION = suggestion; }
     void clearErrorMessage() { ERROR_MESSAGE = ""; }
 
     bool checkEmpty(vector<string> list);

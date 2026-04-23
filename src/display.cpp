@@ -27,10 +27,7 @@ void handlelistContents(vector<string> names)
 
 void displaySpecialMessage(string message)
 {
-    cout << string(80, '=') << endl;
     cout << message << endl;
-    cout << string(80, '=') << endl;
-    cout << endl;
 }
 
 void displayCurrentPath(vector<string> ancestors)
@@ -43,7 +40,8 @@ void displayCurrentPath(vector<string> ancestors)
     cout << path << "$ ";
 }
 
-void displayError(string str)
+void displayError(string str, string suggestion)
 {
-    cout << endl << str << endl;
+    cout << str << endl;
+    cout << suggestion << endl;
 }

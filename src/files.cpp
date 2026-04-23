@@ -7,6 +7,8 @@
 
 #include "files.h"
 #include "utils.h"
+#include "display.h"
+#include "validation.h"
 
 using namespace std;
 
@@ -31,8 +33,15 @@ bool virtualFile::checkFileTypeExistence(string str)
     }
     return false;
 }
-shared_ptr<virtualFile> virtualFolder::createFile(string content, string name, string type)
+shared_ptr<virtualFile> virtualFolder::createFile(string content, string name, string type, Validator INPUT_VALIDATOR)
 {
+    vector<string> files = this->getFilesName();
+    if(find(files.begin(), files.end(), name) != files.end())
+    {
+        INPUT_VALIDATOR.setErrorMessage("Error: A file with the same name already exists in this directory.");
+        INPUT_VALIDATOR.setSuggestion("Use another name.");
+        return nullptr;
+    }
     auto fileptr = make_shared<virtualFile>(content, name, this, type);
     this->addEntity(fileptr);
     return fileptr;
@@ -44,8 +53,15 @@ void virtualFolder::addEntity(shared_ptr<FileSystemEntity> entity)
     memberCount++;
 }
 
-shared_ptr<virtualFolder> virtualFolder::createFolder(string name)
+shared_ptr<virtualFolder> virtualFolder::createFolder(string name, Validator INPUT_VALIDATOR)
 {
+    vector<string> folders = this->getFoldersName();
+    if(find(folders.begin(), folders.end(), name) != folders.end())    
+    {
+        INPUT_VALIDATOR.setErrorMessage("Error: A folder with the same name already exists in this directory.");
+        INPUT_VALIDATOR.setSuggestion("Use another name.");
+        return nullptr;
+    }
     auto folderptr = make_shared<virtualFolder>(name, this);
     this->addEntity(folderptr);
     return folderptr;
@@ -126,7 +142,7 @@ virtualFolder *FileSystem::changeDirectory(string path)
         {
             if (cwd->getParentNode() == nullptr)
             {
-                cout << "You're on the root folder!!!";
+                displaySpecialMessage("You're on the root folder!!!");
                 break;
             }
             cwd = static_cast<virtualFolder *>(cwd->getParentNode());
@@ -141,11 +157,51 @@ virtualFolder *FileSystem::changeDirectory(string path)
         }
         else
         {
+
             if (cwd->checkFolderExistence(actionList[i]))
             {
                 cwd = static_cast<virtualFolder *>(cwd->getPointerFromName(actionList[i]).get());
+            }else{
+                displaySpecialMessage("Error: No such directory exists.");
             }
         }
     }
     return cwd;
+}
+
+virtualFolder* FileSystem::traverseTree(string path)
+{
+    vector<string> actionList = parseInputs(path, '/');
+    virtualFolder* node = cwd;
+    for (size_t i = 0; i < actionList.size(); i++)
+    {
+        if (actionList[i] == "..")
+        {
+            if (node->getParentNode() == nullptr)
+            {
+                displaySpecialMessage("You're on the root folder!!!");
+                break;
+            }
+            node = static_cast<virtualFolder *>(node->getParentNode());
+        }
+        else if (actionList[i] == ".")
+        {
+            continue;
+        }
+        else if (actionList[i] == "~")
+        {
+            node = root.get();
+        }
+        else
+        {
+            if (node->checkFolderExistence(actionList[i]))
+            {
+                node = static_cast<virtualFolder *>(node->getPointerFromName(actionList[i]).get());
+            }else{
+                displaySpecialMessage("Error: No such directory exists.");
+            }
+        }
+    }
+    return node;
+
 }

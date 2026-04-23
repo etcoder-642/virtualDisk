@@ -31,8 +31,6 @@ int main()
     virtualFolder *cwd = fs.getCWD();
     Validator INPUT_VALIDATOR;
 
-    
-
     map<string, CommandCode> commandMap = {
         {"mkdir", CommandCode::MKDIR},
         {"ls", CommandCode::LS},
@@ -60,7 +58,7 @@ int main()
         vector<string> parts = parseInputs(userChoice, ' ');
         if (!INPUT_VALIDATOR.syntaxCheckerInput(parts))
         {
-            displayError(INPUT_VALIDATOR.getErrorMessage());
+            displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
             displayCurrentPath(cwd->buildAncestorsList(cwd));
             continue;
         }
@@ -75,23 +73,51 @@ int main()
         {
         case CommandCode::MKDIR:
         {
-            for (string str: args)
+            if (!INPUT_VALIDATOR.syntaxCheckerMKDIR(args))
             {
-                cwd->createFolder(str);
-                displaySpecialMessage(str + " Folder Created successfully!!!");
+                displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                break;
+            }
+            for (string str : args)
+            {
+                if (!INPUT_VALIDATOR.isValidName(str))
+                {
+                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    continue;
+                }
+                if(cwd->createFolder(str, INPUT_VALIDATOR) == nullptr)
+                {
+                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                }
+                else
+                {
+                    displaySpecialMessage(str + " Folder Created successfully!!!");
+                }
             }
         }
         break;
         case CommandCode::LS:
         {
             vector<string> list;
-            if(args.empty()){
+            virtualFolder *destination;
+            if (args.empty())
+            {
                 list = cwd->getContentNames();
-            }else {
-                if(cwd->checkFolderExistence(args[0])){
-
-                }else {
-                    displaySpecialMessage("");
+            }
+            else
+            {
+                destination = fs.traverseTree(args[0]);
+                if(destination == nullptr)
+                {
+                    displaySpecialMessage("Error: No such directory exists.");
+                    break;
+                }else if (destination->isFolder())
+                {
+                    list = destination->getContentNames();
+                }
+                else
+                {
+                    displaySpecialMessage("This is a file, not a folder.");
                 }
             }
             handlelistContents(list);
@@ -99,6 +125,10 @@ int main()
         break;
         case CommandCode::CD:
         {
+            if (args.empty())
+            {
+                args.push_back("~");
+            }
             cwd = static_cast<virtualFolder *>(fs.changeDirectory(args[0]));
             fs.setCWD(cwd);
         }
@@ -106,16 +136,17 @@ int main()
         case CommandCode::TOUCH:
         {
             vector<string> rn;
-            for(string str: args){
+            for (string str : args)
+            {
                 rn = parseInputs(str, '.');
-                if(virtualFile::checkFileTypeExistence(rn[1])){
+                if (virtualFile::checkFileTypeExistence(rn[1]))
+                {
                     cwd->createFile("", rn[0], rn[1]);
                     displaySpecialMessage(str + "File was created");
                 }
             }
-
         }
-            break;
+        break;
         case CommandCode::RM:
             break;
         case CommandCode::CAT:
