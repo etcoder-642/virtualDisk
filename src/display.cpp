@@ -42,3 +42,8 @@ void displayCurrentPath(vector<string> ancestors)
     }
     cout << path << "$ ";
 }
+
+void displayError(string str)
+{
+    cout << endl << str << endl;
+}

@@ -6,7 +6,8 @@ TARGET = bin/virtualDisk
 SRCS = src/display.cpp \
        src/files.cpp \
        src/main.cpp \
-       src/utils.cpp
+       src/utils.cpp \
+	   src/validation.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 

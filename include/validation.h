@@ -5,16 +5,22 @@
 #include <iostream>
 #include <vector>
 
-Class validator {
+
+class Validator {
 private:
     string ERROR_MESSAGE;
-    string suggestion;
+    string SUGGESTION;
+    static vector<string> allCommands;
 public:
-    validator() : ERROR_MESSAGE("Invalid input. Please try again.") {}
+    Validator() : ERROR_MESSAGE("Invalid input. Please try again.") {}
     string getErrorMessage() const { return ERROR_MESSAGE; }
     void clearErrorMessage() { ERROR_MESSAGE = ""; }
+
     bool checkEmpty(vector<string> list);
-}
+    bool isValidName(const string& name);
+    bool syntaxCheckerMKDIR(vector<string>& str);
+    bool syntaxCheckerInput(vector<string>& str);
+};
 
 
 

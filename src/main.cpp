@@ -7,6 +7,7 @@
 #include "../include/files.h"
 #include "../include/display.h"
 #include "../include/utils.h"
+#include "../include/validation.h"
 
 using namespace std;
 
@@ -28,6 +29,7 @@ int main()
     FileSystem fs;
     auto root = fs.getRoot();
     virtualFolder *cwd = fs.getCWD();
+    Validator INPUT_VALIDATOR;
 
     
 
@@ -56,8 +58,9 @@ int main()
     while (code != CommandCode::EXIT && getline(cin, userChoice))
     {
         vector<string> parts = parseInputs(userChoice, ' ');
-        if (parts.empty())
+        if (!INPUT_VALIDATOR.syntaxCheckerInput(parts))
         {
+            displayError(INPUT_VALIDATOR.getErrorMessage());
             displayCurrentPath(cwd->buildAncestorsList(cwd));
             continue;
         }
