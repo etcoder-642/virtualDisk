@@ -141,8 +141,8 @@ int main()
                 rn = parseInputs(str, '.');
                 if (virtualFile::checkFileTypeExistence(rn[1]))
                 {
-                    cwd->createFile("", rn[0], rn[1]);
-                    displaySpecialMessage(str + "File was created");
+                    cwd->createFile("", rn[0], rn[1], INPUT_VALIDATOR);
+                    displaySpecialMessage(str + " File was created");
                 }
             }
         }

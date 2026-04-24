@@ -5,10 +5,10 @@
 #include <memory>
 #include <algorithm>
 
-#include "files.h"
-#include "utils.h"
-#include "display.h"
-#include "validation.h"
+#include "../include/files.h"
+#include "../include/utils.h"
+#include "../include/display.h"
+#include "../include/validation.h"
 
 using namespace std;
 
@@ -33,7 +33,7 @@ bool virtualFile::checkFileTypeExistence(string str)
     }
     return false;
 }
-shared_ptr<virtualFile> virtualFolder::createFile(string content, string name, string type, Validator INPUT_VALIDATOR)
+shared_ptr<virtualFile> virtualFolder::createFile(string content, string name, string type, Validator& INPUT_VALIDATOR)
 {
     vector<string> files = this->getFilesName();
     if(find(files.begin(), files.end(), name) != files.end())
@@ -53,7 +53,7 @@ void virtualFolder::addEntity(shared_ptr<FileSystemEntity> entity)
     memberCount++;
 }
 
-shared_ptr<virtualFolder> virtualFolder::createFolder(string name, Validator INPUT_VALIDATOR)
+shared_ptr<virtualFolder> virtualFolder::createFolder(string name, Validator& INPUT_VALIDATOR)
 {
     vector<string> folders = this->getFoldersName();
     if(find(folders.begin(), folders.end(), name) != folders.end())    

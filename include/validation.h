@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 
+using namespace std;
+
 
 class Validator {
 private:
@@ -13,8 +15,8 @@ private:
     static vector<string> allCommands;
 public:
     Validator() : ERROR_MESSAGE("Invalid input. Please try again.") {}
-    string getErrorMessage() const { return ERROR_MESSAGE; }
-    string getSuggestion() const { return SUGGESTION; }
+    string getErrorMessage() { return ERROR_MESSAGE; }
+    string getSuggestion() { return SUGGESTION; }
     void setErrorMessage(string message) { ERROR_MESSAGE = message; }
     void setSuggestion(string suggestion) { SUGGESTION = suggestion; }
     void clearErrorMessage() { ERROR_MESSAGE = ""; }
