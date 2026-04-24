@@ -139,6 +139,7 @@ int main()
             for (string str : args)
             {
                 rn = parseInputs(str, '.');
+                
                 if (virtualFile::checkFileTypeExistence(rn[1]))
                 {
                     cwd->createFile("", rn[0], rn[1], INPUT_VALIDATOR);
