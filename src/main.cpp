@@ -100,28 +100,40 @@ int main()
         {
             vector<string> list;
             virtualFolder *destination;
+            map<string, vector<string>> multipleLists;
+            bool checkIfMultiple = false;
             if (args.empty())
             {
                 list = cwd->getContentNames();
             }
             else
             {
-                destination = fs.traverseTree(args[0]);
-                if (destination == nullptr)
-                {
-                    displaySpecialMessage("Error: No such directory exists.");
-                    break;
+                if(args.size() > 1){
+                    checkIfMultiple = true;
                 }
-                else if (destination->isFolder())
+                for (int i = 0; i < args.size(); i++)
                 {
-                    list = destination->getContentNames();
-                }
-                else
-                {
-                    displaySpecialMessage("This is a file, not a folder.");
+                    destination = fs.traverseTree(args[i]);
+                    if (destination == nullptr)
+                    {
+                        displaySpecialMessage("Error: No such directory exists.");
+                        break;
+                    }
+                    else
+                    {
+                        list = destination->getContentNames();
+                        multipleLists[args[i]] = list;
+                    }
                 }
             }
-            handlelistContents(list);
+            if (!list.empty())
+            {
+                if(!checkIfMultiple){
+                   handlelistContents(list);
+                }else {
+                    handleMultipleListContents(multipleLists);
+                }
+            }
         }
         break;
         case CommandCode::CD:
@@ -150,7 +162,7 @@ int main()
                     continue;
                 }
                 rn = parseInputs(str, '.');
-                if(cwd->createFile("", str, rn[1], INPUT_VALIDATOR) == nullptr)
+                if (cwd->createFile("", str, rn[1], INPUT_VALIDATOR) == nullptr)
                 {
                     displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
                 }

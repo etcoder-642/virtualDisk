@@ -67,12 +67,14 @@ bool Validator::isValidName(const std::string& name)
     // 1. Check for empty string
     if (name.empty()) {
         ERROR_MESSAGE = "Error: Name cannot be empty.";
+        SUGGESTION = "Provide a valid name for the file or folder.";
         return false;
     }
 
     // 2. Check Length (Max 255 characters)
     if (name.length() > 255) {
         ERROR_MESSAGE = "Error: Name is too long (Max 255 chars).";
+        SUGGESTION = "Provide a shorter name for the file or folder.";
         return false;
     }
 
@@ -80,6 +82,7 @@ bool Validator::isValidName(const std::string& name)
     // find_first_of is faster than multiple find() calls
     if (name.find_first_of(" /\\") != std::string::npos) {
         ERROR_MESSAGE = "Error: Name contains illegal characters (space, / or \\).";
+        SUGGESTION = "Remove spaces and characters like / or \\ from the name.";
         return false;
     }
 
@@ -88,6 +91,7 @@ bool Validator::isValidName(const std::string& name)
     char firstChar = name[0];
     if (firstChar == '-' || firstChar == '.' || firstChar == '+') {
         ERROR_MESSAGE = "Error: Name cannot start with a symbol (-, ., or +).";
+        SUGGESTION = "Provide a valid name for the file or folder.";
         return false;
     }
 
@@ -119,6 +123,9 @@ bool Validator::isValidFileName(string str)
     if(!virtualFile::checkFileTypeExistence(parts[1])){
         ERROR_MESSAGE = "Error: Invalid file type.";
         SUGGESTION = "type `help -ls filetype` to see list of all valid file types.";
+        return false;
+    }
+    if(isValidName(parts[0]) == false){
         return false;
     }
     return true;

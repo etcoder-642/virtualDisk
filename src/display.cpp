@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <vector>
 #include <string>
+#include <map>
 
 using namespace std;
 
@@ -18,10 +19,23 @@ void initialPage()
 
 void handlelistContents(vector<string> names)
 {
-    cout << "-------------------------- LIST OF ALL FILES AND FOLDERS -----------------------" << endl;
+    cout << string(80, '-') << endl;
     for (int i = 0; i < names.size(); i++)
     {
-        cout << left << setw(5) << i << left << setw(30) << names[i] << string(30, '-') << endl;
+        cout << names[i] << " ";
+    }
+    cout << endl << string(80, '-') << endl;
+}
+
+void handleMultipleListContents(map<string, vector<string>> multipleLists)
+{
+    for(auto const& element: multipleLists)
+    {
+        string key = element.first;
+        vector<string> value = element.second;
+        cout << key << ":" << endl;
+        handlelistContents(value);
+        cout << endl;
     }
 }
 

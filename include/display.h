@@ -13,5 +13,6 @@ void displaySpecialMessage(string message);
 void handlelistContents(vector<string> names);
 void displayCurrentPath(vector<string> ancestors);
 void displayError(string str, string suggestion);
+void handleMultipleListContents(map<string, vector<string>> multipleLists);
 
 #endif
