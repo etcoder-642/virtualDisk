@@ -85,7 +85,7 @@ int main()
                     displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
                     continue;
                 }
-                if(cwd->createFolder(str, INPUT_VALIDATOR) == nullptr)
+                if (cwd->createFolder(str, INPUT_VALIDATOR) == nullptr)
                 {
                     displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
                 }
@@ -107,11 +107,12 @@ int main()
             else
             {
                 destination = fs.traverseTree(args[0]);
-                if(destination == nullptr)
+                if (destination == nullptr)
                 {
                     displaySpecialMessage("Error: No such directory exists.");
                     break;
-                }else if (destination->isFolder())
+                }
+                else if (destination->isFolder())
                 {
                     list = destination->getContentNames();
                 }
@@ -136,13 +137,25 @@ int main()
         case CommandCode::TOUCH:
         {
             vector<string> rn;
+            if (!INPUT_VALIDATOR.syntaxCheckerTOUCH(args))
+            {
+                displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                break;
+            }
             for (string str : args)
             {
-                rn = parseInputs(str, '.');
-                
-                if (virtualFile::checkFileTypeExistence(rn[1]))
+                if (!INPUT_VALIDATOR.isValidFileName(str))
                 {
-                    cwd->createFile("", rn[0], rn[1], INPUT_VALIDATOR);
+                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    continue;
+                }
+                rn = parseInputs(str, '.');
+                if(cwd->createFile("", str, rn[1], INPUT_VALIDATOR) == nullptr)
+                {
+                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                }
+                else
+                {
                     displaySpecialMessage(str + " File was created");
                 }
             }

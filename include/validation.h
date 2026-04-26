@@ -25,6 +25,8 @@ public:
     bool isValidName(const string& name);
     bool syntaxCheckerMKDIR(vector<string>& str);
     bool syntaxCheckerInput(vector<string>& str);
+    bool syntaxCheckerTOUCH(vector<string>& str);
+    bool isValidFileName(string str);
 };
 
 

@@ -49,6 +49,7 @@ bool Validator::syntaxCheckerInput(vector<string>& str)
     return true;
 }
 
+// checks for the validity of the syntax of the mkdir command.
 bool Validator::syntaxCheckerMKDIR(vector<string>& str)
 {
     if(str.empty()){
@@ -58,6 +59,8 @@ bool Validator::syntaxCheckerMKDIR(vector<string>& str)
     }
     return true;
 }
+
+// Checks for Validity of file and folder Names
 
 bool Validator::isValidName(const std::string& name) 
 {
@@ -89,4 +92,34 @@ bool Validator::isValidName(const std::string& name)
     }
 
     return true; // Passed all tests!
+}
+
+bool Validator::syntaxCheckerTOUCH(vector<string>& str)
+{
+    if(str.empty()){
+        ERROR_MESSAGE = "Error: Not enough Arguments Provided.";
+        SUGGESTION = "Provide file names to create a file.";
+        return false;
+    }
+    return true;
+}
+
+bool Validator::isValidFileName(string str)
+{
+    vector<string> parts = parseInputs(str, '.');
+    if(parts.size() == 1){
+        ERROR_MESSAGE = "Error: No file type provided.";
+        SUGGESTION = "type `help -ls filetype` to see list of all valid file types.";
+        return false;
+    }else if(parts.size() > 2){
+        ERROR_MESSAGE = "Error: Invalid file name format.";
+        SUGGESTION = "File names should be in the format `name.type`.";
+        return false;
+    }
+    if(!virtualFile::checkFileTypeExistence(parts[1])){
+        ERROR_MESSAGE = "Error: Invalid file type.";
+        SUGGESTION = "type `help -ls filetype` to see list of all valid file types.";
+        return false;
+    }
+    return true;
 }
