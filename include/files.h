@@ -132,8 +132,7 @@ public:
     void setCWD(virtualFolder* newCWD){
         cwd = newCWD;
     }
-    virtualFolder* changeDirectory(string path);
-    virtualFolder* traverseTree(string path);
+    virtualFolder *traverseTree(string path, Validator& INPUT_VALIDATOR);
 };
 
 #endif

@@ -27,8 +27,6 @@ enum class CommandCode
 int main()
 {
     FileSystem fs;
-    auto root = fs.getRoot();
-    virtualFolder *cwd = fs.getCWD();
     Validator INPUT_VALIDATOR;
 
     map<string, CommandCode> commandMap = {
@@ -52,14 +50,14 @@ int main()
 
     string userChoice;
 
-    displayCurrentPath(cwd->buildAncestorsList(cwd));
+    displayCurrentPath(fs.getCWD()->buildAncestorsList(fs.getCWD()));
     while (code != CommandCode::EXIT && getline(cin, userChoice))
     {
         vector<string> parts = parseInputs(userChoice, ' ');
         if (!INPUT_VALIDATOR.syntaxCheckerInput(parts))
         {
             displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
-            displayCurrentPath(cwd->buildAncestorsList(cwd));
+            displayCurrentPath(fs.getCWD()->buildAncestorsList(fs.getCWD()));
             continue;
         }
 
@@ -80,59 +78,72 @@ int main()
             }
             for (string str : args)
             {
-                if (!INPUT_VALIDATOR.isValidName(str))
+                vector<string> parts = parseInputs(str, '/');
+                vector<string> destinationPath(parts.begin(), parts.end() - 1);
+                string folderName = parts.back();
+                virtualFolder *destination = fs.traverseTree(destinationPath.empty() ? "." : joinStrings(destinationPath, '/'), INPUT_VALIDATOR);
+                if (destination == nullptr)
                 {
                     displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
                     continue;
                 }
-                if (cwd->createFolder(str, INPUT_VALIDATOR) == nullptr)
+                if (!INPUT_VALIDATOR.isValidName(folderName))
+                {
+                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    continue;
+                }
+                if (destination->createFolder(folderName, INPUT_VALIDATOR) == nullptr)
                 {
                     displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
                 }
                 else
                 {
-                    displaySpecialMessage(str + " Folder Created successfully!!!");
+                    displaySpecialMessage(folderName + " Folder Created successfully!!!");
                 }
             }
         }
         break;
         case CommandCode::LS:
         {
-            vector<string> list;
             virtualFolder *destination;
             map<string, vector<string>> multipleLists;
             bool checkIfMultiple = false;
             if (args.empty())
             {
-                list = cwd->getContentNames();
+                handlelistContents(fs.getCWD()->getContentNames());
             }
-            else
+            else if (args.size() == 1)
             {
-                if(args.size() > 1){
-                    checkIfMultiple = true;
+                // Case 2: 'ls FolderA'
+                destination = fs.traverseTree(args[0], INPUT_VALIDATOR);
+                if (destination != nullptr)
+                {
+                    handlelistContents(destination->getContentNames());
                 }
+                else
+                {
+                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                }
+            }
+            else if (args.size() > 1)
+            {
                 for (int i = 0; i < args.size(); i++)
                 {
-                    destination = fs.traverseTree(args[i]);
+                    destination = fs.traverseTree(args[i], INPUT_VALIDATOR);
                     if (destination == nullptr)
                     {
-                        displaySpecialMessage("Error: No such directory exists.");
-                        break;
+                        displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                        continue;
                     }
                     else
                     {
-                        list = destination->getContentNames();
-                        multipleLists[args[i]] = list;
+                        multipleLists[args[i]] = destination->getContentNames();;
                     }
                 }
             }
-            if (!list.empty())
+            if (!multipleLists.empty())
             {
-                if(!checkIfMultiple){
-                   handlelistContents(list);
-                }else {
-                    handleMultipleListContents(multipleLists);
-                }
+                handleMultipleListContents(multipleLists);
             }
         }
         break;
@@ -142,13 +153,17 @@ int main()
             {
                 args.push_back("~");
             }
-            cwd = static_cast<virtualFolder *>(fs.changeDirectory(args[0]));
-            fs.setCWD(cwd);
-        }
+            if(fs.traverseTree(args[0], INPUT_VALIDATOR) == nullptr){
+                displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                break;
+            }
+            fs.setCWD(fs.traverseTree(args[0], INPUT_VALIDATOR));
+        }   
         break;
         case CommandCode::TOUCH:
         {
             vector<string> rn;
+            virtualFolder *destination;
             if (!INPUT_VALIDATOR.syntaxCheckerTOUCH(args))
             {
                 displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
@@ -156,19 +171,30 @@ int main()
             }
             for (string str : args)
             {
-                if (!INPUT_VALIDATOR.isValidFileName(str))
+                vector<string> parts = parseInputs(str, '/');
+                vector<string> destinationPath(parts.begin(), parts.end() - 1);
+                string fileName = parts.back();
+
+                virtualFolder *destination = fs.traverseTree(destinationPath.empty() ? "." : joinStrings(destinationPath, '/'), INPUT_VALIDATOR);
+
+                if (destination == nullptr)
                 {
                     displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
                     continue;
                 }
-                rn = parseInputs(str, '.');
-                if (cwd->createFile("", str, rn[1], INPUT_VALIDATOR) == nullptr)
+                if (!INPUT_VALIDATOR.isValidFileName(fileName))
+                {
+                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    continue;
+                }
+                rn = parseInputs(fileName, '.');
+                if (destination->createFile("", fileName, rn[1], INPUT_VALIDATOR) == nullptr)
                 {
                     displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
                 }
                 else
                 {
-                    displaySpecialMessage(str + " File was created");
+                    displaySpecialMessage(fileName + " File was created");
                 }
             }
         }
@@ -191,7 +217,7 @@ int main()
         }
         if (code != CommandCode::EXIT)
         {
-            displayCurrentPath(cwd->buildAncestorsList(cwd));
+            displayCurrentPath(fs.getCWD()->buildAncestorsList(fs.getCWD()));
         }
     }
 }

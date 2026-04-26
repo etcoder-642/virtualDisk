@@ -40,3 +40,14 @@ vector<string> parseInputs(string input, char identifier)
     return res;
 }
 
+string joinStrings(const vector<string>& input, char identifier)
+{
+    string res = "";
+    for(string str: input)
+    {
+        res += str;
+        res += identifier;
+    }
+    return res;
+}
+

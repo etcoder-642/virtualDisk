@@ -133,43 +133,7 @@ shared_ptr<FileSystemEntity> virtualFolder::getPointerFromName(string name)
     return nullptr;
 }
 
-virtualFolder *FileSystem::changeDirectory(string path)
-{
-    vector<string> actionList = parseInputs(path, '/');
-    for (size_t i = 0; i < actionList.size(); i++)
-    {
-        if (actionList[i] == "..")
-        {
-            if (cwd->getParentNode() == nullptr)
-            {
-                displaySpecialMessage("You're on the root folder!!!");
-                break;
-            }
-            cwd = static_cast<virtualFolder *>(cwd->getParentNode());
-        }
-        else if (actionList[i] == ".")
-        {
-            continue;
-        }
-        else if (actionList[i] == "~")
-        {
-            cwd = root.get();
-        }
-        else
-        {
-
-            if (cwd->checkFolderExistence(actionList[i]))
-            {
-                cwd = static_cast<virtualFolder *>(cwd->getPointerFromName(actionList[i]).get());
-            }else{
-                displaySpecialMessage("Error: No such directory exists.");
-            }
-        }
-    }
-    return cwd;
-}
-
-virtualFolder* FileSystem::traverseTree(string path)
+virtualFolder* FileSystem::traverseTree(string path, Validator& INPUT_VALIDATOR)
 {
     vector<string> actionList = parseInputs(path, '/');
     virtualFolder* node = cwd;
@@ -179,7 +143,9 @@ virtualFolder* FileSystem::traverseTree(string path)
         {
             if (node->getParentNode() == nullptr)
             {
-                displaySpecialMessage("You're on the root folder!!!");
+                node = nullptr;
+                INPUT_VALIDATOR.setErrorMessage("Error: Already at root directory.");
+                INPUT_VALIDATOR.setSuggestion("Cannot go up from root directory.");
                 break;
             }
             node = static_cast<virtualFolder *>(node->getParentNode());
@@ -198,10 +164,11 @@ virtualFolder* FileSystem::traverseTree(string path)
             {
                 node = static_cast<virtualFolder *>(node->getPointerFromName(actionList[i]).get());
             }else{
-                displaySpecialMessage("Error: No such directory exists.");
+                INPUT_VALIDATOR.setErrorMessage("Error: No such directory exists.");
+                INPUT_VALIDATOR.setSuggestion("Please check the directory path.");
+                node = nullptr;
             }
         }
     }
     return node;
-
 }
