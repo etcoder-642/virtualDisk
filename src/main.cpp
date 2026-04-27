@@ -50,14 +50,14 @@ int main()
 
     string userChoice;
 
-    displayCurrentPath(fs.getCWD()->buildAncestorsList(fs.getCWD()));
+    displayCurrentPath(fs.getCWD_S()->buildAncestorsList(fs.getCWD()));
     while (code != CommandCode::EXIT && getline(cin, userChoice))
     {
         vector<string> parts = parseInputs(userChoice, ' ');
         if (!INPUT_VALIDATOR.syntaxCheckerInput(parts))
         {
             displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
-            displayCurrentPath(fs.getCWD()->buildAncestorsList(fs.getCWD()));
+            displayCurrentPath(fs.getCWD_S()->buildAncestorsList(fs.getCWD()));
             continue;
         }
 
@@ -81,7 +81,7 @@ int main()
                 vector<string> parts = parseInputs(str, '/');
                 vector<string> destinationPath(parts.begin(), parts.end() - 1);
                 string folderName = parts.back();
-                virtualFolder *destination = fs.traverseTree(destinationPath.empty() ? "." : joinStrings(destinationPath, '/'), INPUT_VALIDATOR);
+                shared_ptr<virtualFolder> destination = fs.traverseTree_S(destinationPath.empty() ? "." : joinStrings(destinationPath, '/'), INPUT_VALIDATOR);
                 if (destination == nullptr)
                 {
                     displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
@@ -105,17 +105,16 @@ int main()
         break;
         case CommandCode::LS:
         {
-            virtualFolder *destination;
+            shared_ptr<virtualFolder> destination;
             map<string, vector<string>> multipleLists;
-            bool checkIfMultiple = false;
             if (args.empty())
             {
-                handlelistContents(fs.getCWD()->getContentNames());
+                handlelistContents(fs.getCWD_S()->getContentNames());
             }
             else if (args.size() == 1)
             {
                 // Case 2: 'ls FolderA'
-                destination = fs.traverseTree(args[0], INPUT_VALIDATOR);
+                destination = fs.traverseTree_S(args[0], INPUT_VALIDATOR);
                 if (destination != nullptr)
                 {
                     handlelistContents(destination->getContentNames());
@@ -127,9 +126,9 @@ int main()
             }
             else if (args.size() > 1)
             {
-                for (int i = 0; i < args.size(); i++)
+                for (size_t i = 0; i < args.size(); i++)
                 {
-                    destination = fs.traverseTree(args[i], INPUT_VALIDATOR);
+                    destination = fs.traverseTree_S(args[i], INPUT_VALIDATOR);
                     if (destination == nullptr)
                     {
                         displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
@@ -153,17 +152,17 @@ int main()
             {
                 args.push_back("~");
             }
-            if(fs.traverseTree(args[0], INPUT_VALIDATOR) == nullptr){
+            if(fs.traverseTree_S(args[0], INPUT_VALIDATOR) == nullptr){
                 displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
                 break;
             }
-            fs.setCWD(fs.traverseTree(args[0], INPUT_VALIDATOR));
+            fs.setCWD(fs.traverseTree_S(args[0], INPUT_VALIDATOR));
         }   
         break;
         case CommandCode::TOUCH:
         {
             vector<string> rn;
-            virtualFolder *destination;
+            shared_ptr<virtualFolder> destination;
             if (!INPUT_VALIDATOR.syntaxCheckerTOUCH(args))
             {
                 displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
@@ -175,7 +174,7 @@ int main()
                 vector<string> destinationPath(parts.begin(), parts.end() - 1);
                 string fileName = parts.back();
 
-                virtualFolder *destination = fs.traverseTree(destinationPath.empty() ? "." : joinStrings(destinationPath, '/'), INPUT_VALIDATOR);
+                shared_ptr<virtualFolder> destination = fs.traverseTree_S(destinationPath.empty() ? "." : joinStrings(destinationPath, '/'), INPUT_VALIDATOR);
 
                 if (destination == nullptr)
                 {
@@ -200,6 +199,9 @@ int main()
         }
         break;
         case CommandCode::RM:
+        {
+
+        }
             break;
         case CommandCode::CAT:
             break;
@@ -217,7 +219,7 @@ int main()
         }
         if (code != CommandCode::EXIT)
         {
-            displayCurrentPath(fs.getCWD()->buildAncestorsList(fs.getCWD()));
+            displayCurrentPath(fs.getCWD_S()->buildAncestorsList(fs.getCWD()));
         }
     }
 }

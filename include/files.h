@@ -14,16 +14,17 @@
 
 using namespace std;
 
-class FileSystemEntity
+class virtualFolder;
+class FileSystemEntity : public enable_shared_from_this<FileSystemEntity>
 {
 protected:
     string name;
     string createdAt;
     string modifiedAt;
-    FileSystemEntity *parent;
+    weak_ptr<FileSystemEntity> parent;
 
 public:
-    FileSystemEntity(string n, FileSystemEntity *p)
+    FileSystemEntity(string n, weak_ptr<FileSystemEntity> p)
         : name(n), parent(p)
     {
         auto now = std::time(nullptr);
@@ -38,6 +39,7 @@ public:
     string getCreatedAt() const { return createdAt; }
     string getModifiedAt() const { return modifiedAt; }
     auto getParentNode() const { return parent; }
+    auto getParentAsFolder() const;
     string getName() const { return name; }
 
     void setName(string newName) { name = newName; }
@@ -57,8 +59,8 @@ private:
     static vector<string> validTypes;
 
 public:
-    virtualFile(string content, string name, FileSystemEntity *parent, string type = "txt")
-        : content(content), FileSystemEntity(name, parent), type(type), size(content.size()) {}
+    virtualFile(string content, string name, weak_ptr<FileSystemEntity> parent, string type = "txt")
+        : FileSystemEntity(name, parent), content(content), type(type), size(content.size()) {}
 
     string getContent() const { return content; }
     long long getSize() const { return size; }
@@ -88,7 +90,7 @@ private:
     vector<shared_ptr<FileSystemEntity>> contents;
 
 public:
-    virtualFolder(string name, FileSystemEntity *parent)
+    virtualFolder(string name, weak_ptr<FileSystemEntity> parent)
         : FileSystemEntity(name, parent), totalSize(0), memberCount(0) {}
 
     long long getTotalSize() const { return totalSize; }
@@ -111,28 +113,34 @@ public:
     shared_ptr<virtualFile> createFile(string content, string name, string type, Validator& INPUT_VALIDATOR);
     void addEntity(shared_ptr<FileSystemEntity> entity);
     shared_ptr<virtualFolder> createFolder(string name, Validator& INPUT_VALIDATOR);
-    vector<string> buildAncestorsList(FileSystemEntity *initialNode);
+    vector<string> buildAncestorsList(weak_ptr<FileSystemEntity> initialNode);
     bool checkFolderExistence(string folderName);
     shared_ptr<FileSystemEntity> getPointerFromName(string name);
+    shared_ptr<virtualFolder> getPointerFromNameAsFolder(string name);
 };
 
 
 class FileSystem {
 private:
     shared_ptr<virtualFolder> root;
-    virtualFolder* cwd;
+    weak_ptr<virtualFolder> cwd;
 public:
     FileSystem() {
-        root = make_shared<virtualFolder>("root", nullptr);
-        cwd = root.get();
+        root = make_shared<virtualFolder>("root", weak_ptr<FileSystemEntity>());
+        cwd = root;
     }
     shared_ptr<virtualFolder> getRoot() const { return root; }
-    virtualFolder* getCWD() const { return cwd; }
+    weak_ptr<virtualFolder> getCWD() const { return cwd; }
 
-    void setCWD(virtualFolder* newCWD){
+    void setCWD(weak_ptr<virtualFolder> newCWD){
         cwd = newCWD;
     }
-    virtualFolder *traverseTree(string path, Validator& INPUT_VALIDATOR);
+
+    shared_ptr<virtualFolder> getCWD_S() const { // getCWD_S stands for getCWD_Shared, it returns a shared_ptr instead of weak_ptr
+        return cwd.lock();
+    }
+    weak_ptr<virtualFolder> traverseTree(string path, Validator& INPUT_VALIDATOR);
+    shared_ptr<virtualFolder> traverseTree_S(string path, Validator& INPUT_VALIDATOR);
 };
 
 #endif

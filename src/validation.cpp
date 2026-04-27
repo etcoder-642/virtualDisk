@@ -98,11 +98,15 @@ bool Validator::isValidName(const std::string& name)
     return true; // Passed all tests!
 }
 
-bool Validator::syntaxCheckerTOUCH(vector<string>& str)
+bool Validator::syntaxCheckerTOUCH(vector<string>& args)
 {
-    if(str.empty()){
+    if(args.empty()){
         ERROR_MESSAGE = "Error: Not enough Arguments Provided.";
         SUGGESTION = "Provide file names to create a file.";
+        return false;
+    }else if(args[0] == "." && args.size() == 1){
+        ERROR_MESSAGE = "Error: Invalid file name.";
+        SUGGESTION = "Provide a valid name for the file.";
         return false;
     }
     return true;

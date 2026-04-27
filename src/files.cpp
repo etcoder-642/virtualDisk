@@ -12,11 +12,15 @@
 
 using namespace std;
 
+auto FileSystemEntity::getParentAsFolder() const
+{
+    return dynamic_pointer_cast<virtualFolder>(parent.lock());
+}
+
 vector<string> virtualFile::validTypes = {
     "txt", "json", "xml", "dat", "cfg", "save",
     "png", "jpg", "wav", "ogg", "mp3", "mp4",
-    "lvl", "map", "log", "tmp", "pdf", "zip"
-};
+    "lvl", "map", "log", "tmp", "pdf", "zip"};
 
 void virtualFile::registerFileType(string str)
 {
@@ -28,22 +32,25 @@ void virtualFile::registerFileType(string str)
 
 bool virtualFile::checkFileTypeExistence(string str)
 {
-    for(size_t i = 0;i < validTypes.size(); i++){
-        if(str == validTypes[i]) return true;
+    for (size_t i = 0; i < validTypes.size(); i++)
+    {
+        if (str == validTypes[i])
+            return true;
     }
     return false;
 }
-shared_ptr<virtualFile> virtualFolder::createFile(string content, string name, string type, Validator& INPUT_VALIDATOR)
+shared_ptr<virtualFile> virtualFolder::createFile(string content, string name, string type, Validator &INPUT_VALIDATOR)
 {
-    vector<string> files = this->getFilesName();
-    if(find(files.begin(), files.end(), name) != files.end())
+    auto self = static_pointer_cast<virtualFolder>(shared_from_this());
+    vector<string> files = self->getFilesName();
+    if (find(files.begin(), files.end(), name) != files.end())
     {
         INPUT_VALIDATOR.setErrorMessage("Error: A file with the same name already exists in this directory.");
         INPUT_VALIDATOR.setSuggestion("Use another name.");
         return nullptr;
     }
-    auto fileptr = make_shared<virtualFile>(content, name, this, type);
-    this->addEntity(fileptr);
+    auto fileptr = make_shared<virtualFile>(content, name, self, type);
+    self->addEntity(fileptr);
     return fileptr;
 }
 
@@ -53,17 +60,18 @@ void virtualFolder::addEntity(shared_ptr<FileSystemEntity> entity)
     memberCount++;
 }
 
-shared_ptr<virtualFolder> virtualFolder::createFolder(string name, Validator& INPUT_VALIDATOR)
+shared_ptr<virtualFolder> virtualFolder::createFolder(string name, Validator &INPUT_VALIDATOR)
 {
-    vector<string> folders = this->getFoldersName();
-    if(find(folders.begin(), folders.end(), name) != folders.end())    
+    auto self = static_pointer_cast<virtualFolder>(shared_from_this());
+    vector<string> folders = self->getFoldersName();
+    if (find(folders.begin(), folders.end(), name) != folders.end())
     {
         INPUT_VALIDATOR.setErrorMessage("Error: A folder with the same name already exists in this directory.");
         INPUT_VALIDATOR.setSuggestion("Use another name.");
         return nullptr;
     }
-    auto folderptr = make_shared<virtualFolder>(name, this);
-    this->addEntity(folderptr);
+    auto folderptr = make_shared<virtualFolder>(name, self);
+    self->addEntity(folderptr);
     return folderptr;
 }
 
@@ -93,14 +101,14 @@ vector<string> virtualFolder::getFilesName() const
     return res;
 }
 
-vector<string> virtualFolder::buildAncestorsList(FileSystemEntity *initialNode)
+vector<string> virtualFolder::buildAncestorsList(weak_ptr<FileSystemEntity> initialNode)
 {
     vector<string> res;
-    FileSystemEntity *node = initialNode;
+    auto node = initialNode.lock();
     while (node != nullptr)
     {
         res.push_back(node->getName());
-        node = node->getParentNode();
+        node = node->getParentNode().lock();
     }
     reverse(res.begin(), res.end());
     return res;
@@ -133,22 +141,44 @@ shared_ptr<FileSystemEntity> virtualFolder::getPointerFromName(string name)
     return nullptr;
 }
 
-virtualFolder* FileSystem::traverseTree(string path, Validator& INPUT_VALIDATOR)
+shared_ptr<virtualFolder> virtualFolder::getPointerFromNameAsFolder(string name)
+{
+    for (const auto &entity : contents)
+    {
+        if (entity->getName() == name)
+        {
+            return dynamic_pointer_cast<virtualFolder>(entity);
+        }
+    }
+    return nullptr;
+}
+
+weak_ptr<virtualFolder> FileSystem::traverseTree(string path, Validator &INPUT_VALIDATOR)
 {
     vector<string> actionList = parseInputs(path, '/');
-    virtualFolder* node = cwd;
+    weak_ptr<virtualFolder> node = cwd;
     for (size_t i = 0; i < actionList.size(); i++)
     {
+        auto currentShared = node.lock();
+        if (!currentShared)
+        {
+            INPUT_VALIDATOR.setErrorMessage("Error: Current directory is invalid.");
+            INPUT_VALIDATOR.setSuggestion("Please check the current directory.");
+            return weak_ptr<virtualFolder>();
+        }
         if (actionList[i] == "..")
         {
-            if (node->getParentNode() == nullptr)
+            auto parentFolder = currentShared->getParentAsFolder();
+            if (parentFolder)
             {
-                node = nullptr;
+                node = parentFolder;
+            }
+            else
+            {
                 INPUT_VALIDATOR.setErrorMessage("Error: Already at root directory.");
                 INPUT_VALIDATOR.setSuggestion("Cannot go up from root directory.");
-                break;
+                return weak_ptr<virtualFolder>();
             }
-            node = static_cast<virtualFolder *>(node->getParentNode());
         }
         else if (actionList[i] == ".")
         {
@@ -156,19 +186,42 @@ virtualFolder* FileSystem::traverseTree(string path, Validator& INPUT_VALIDATOR)
         }
         else if (actionList[i] == "~")
         {
-            node = root.get();
+            node = root;
         }
         else
         {
-            if (node->checkFolderExistence(actionList[i]))
+            if (currentShared->checkFolderExistence(actionList[i]))
             {
-                node = static_cast<virtualFolder *>(node->getPointerFromName(actionList[i]).get());
-            }else{
+                auto nextFolder = currentShared->getPointerFromNameAsFolder(actionList[i]);
+                if (!nextFolder)
+                {
+                    INPUT_VALIDATOR.setErrorMessage("Error: " + actionList[i] + " is not a directory.");
+                    INPUT_VALIDATOR.setSuggestion("Please check the directory path.");
+                    return weak_ptr<virtualFolder>();
+                }
+                else
+                {
+                    node = nextFolder;
+                }
+            }
+            else
+            {
                 INPUT_VALIDATOR.setErrorMessage("Error: No such directory exists.");
                 INPUT_VALIDATOR.setSuggestion("Please check the directory path.");
-                node = nullptr;
+                return weak_ptr<virtualFolder>();
             }
         }
+    }
+    return node;
+}
+
+shared_ptr<virtualFolder> FileSystem::traverseTree_S(string path, Validator &INPUT_VALIDATOR)
+{
+    auto node = traverseTree(path, INPUT_VALIDATOR).lock();
+    if (!node)
+    {
+        INPUT_VALIDATOR.setErrorMessage("Error: Directory does not exist.");
+        INPUT_VALIDATOR.setSuggestion("Please check the directory path.");
     }
     return node;
 }
