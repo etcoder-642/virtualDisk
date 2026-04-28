@@ -117,6 +117,10 @@ public:
     bool checkFolderExistence(string folderName);
     shared_ptr<FileSystemEntity> getPointerFromName(string name);
     shared_ptr<virtualFolder> getPointerFromNameAsFolder(string name);
+    shared_ptr<virtualFile> getPointerFromNameAsFile(string name, Validator& INPUT_VALIDATOR);
+    bool removeFile(shared_ptr<virtualFile> file, Validator& INPUT_VALIDATOR);
+    shared_ptr<virtualFolder> removeFolder(shared_ptr<virtualFolder> folder, shared_ptr<virtualFolder> cwd);
+    void removeFileByName(string name);
 };
 
 

@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Iinclude
+CXXFLAGS = -std=c++17 -Wall -g -Iinclude
 TARGET = bin/virtualDisk
 
 # Updated for your Virtual Disk files

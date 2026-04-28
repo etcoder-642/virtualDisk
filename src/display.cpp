@@ -20,7 +20,7 @@ void initialPage()
 void handlelistContents(vector<string> names)
 {
     cout << string(80, '-') << endl;
-    for (int i = 0; i < names.size(); i++)
+    for (size_t i = 0; i < names.size(); i++)
     {
         cout << names[i] << " ";
     }

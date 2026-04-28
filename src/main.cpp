@@ -200,7 +200,35 @@ int main()
         break;
         case CommandCode::RM:
         {
+            vector<string> rn;
+            shared_ptr<virtualFolder> destination;
+            for (string str : args)
+            {
+                vector<string> parts = parseInputs(str, '/');
+                vector<string> destinationPath(parts.begin(), parts.end() - 1);
+                string fileName = parts.back();
 
+                shared_ptr<virtualFolder> destination = fs.traverseTree_S(destinationPath.empty() ? "." : joinStrings(destinationPath, '/'), INPUT_VALIDATOR);
+
+                if (destination == nullptr)
+                {
+                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    continue;
+                }
+                shared_ptr<virtualFile> filePtr = destination->getPointerFromNameAsFile(fileName, INPUT_VALIDATOR);
+                if(filePtr == nullptr){
+                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    continue;
+                }
+                if (!destination->removeFile(filePtr, INPUT_VALIDATOR))
+                {
+                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                }
+                else
+                {
+                    displaySpecialMessage(fileName + " File was deleted");
+                }
+            }
         }
             break;
         case CommandCode::CAT:

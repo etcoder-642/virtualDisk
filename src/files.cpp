@@ -60,6 +60,36 @@ void virtualFolder::addEntity(shared_ptr<FileSystemEntity> entity)
     memberCount++;
 }
 
+bool virtualFolder::removeFile(shared_ptr<virtualFile> file, Validator& INPUT_VALIDATOR)
+{
+    auto it = remove(contents.begin(), contents.end(), file);
+    if (it != contents.end())
+    {
+        contents.erase(it, contents.end());
+        memberCount--;
+        return true;
+    }else {
+        INPUT_VALIDATOR.setErrorMessage("Error: No such file exists in this directory.");
+        INPUT_VALIDATOR.setSuggestion("Please check the file name.");
+        return false;
+    }
+    return false;
+}
+
+shared_ptr<virtualFolder> virtualFolder::removeFolder(shared_ptr<virtualFolder> folder, shared_ptr<virtualFolder> cwd)
+{
+    if(cwd == folder){
+        cwd = folder->getParentAsFolder();
+    }
+    auto it = remove(contents.begin(), contents.end(), folder);
+    if (it != contents.end())
+    {
+        contents.erase(it, contents.end());
+        memberCount--;
+    }
+    return cwd;
+}
+
 shared_ptr<virtualFolder> virtualFolder::createFolder(string name, Validator &INPUT_VALIDATOR)
 {
     auto self = static_pointer_cast<virtualFolder>(shared_from_this());
@@ -152,6 +182,26 @@ shared_ptr<virtualFolder> virtualFolder::getPointerFromNameAsFolder(string name)
     }
     return nullptr;
 }
+
+shared_ptr<virtualFile> virtualFolder::getPointerFromNameAsFile(string name, Validator& INPUT_VALIDATOR)
+{
+    for (const auto &entity : contents)
+    {
+        if (entity->getName() == name)
+        {
+            auto fileptr = dynamic_pointer_cast<virtualFile>(entity);
+            if (!fileptr) {
+                INPUT_VALIDATOR.setErrorMessage("Error: '" + name + "' is a directory, not a file.");
+                INPUT_VALIDATOR.setSuggestion("Try using directory-specific commands or check the name.");
+                return nullptr;
+            }
+            return fileptr;
+        }
+    }
+    INPUT_VALIDATOR.setErrorMessage("Error: File not found.");
+    INPUT_VALIDATOR.setSuggestion("Please check the file name.");
+    return nullptr;
+}   
 
 weak_ptr<virtualFolder> FileSystem::traverseTree(string path, Validator &INPUT_VALIDATOR)
 {
