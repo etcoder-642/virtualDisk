@@ -8,26 +8,33 @@
 #include "../include/display.h"
 #include "../include/utils.h"
 #include "../include/validation.h"
+#include "../include/error/error.h"
+#include "../include/error/result.h"
 
-using namespace std;
 
-enum class CommandCode
+namespace vfs
 {
-    MKDIR,
-    LS,
-    CD,
-    TOUCH,
-    RM,
-    CAT,
-    HELP,
-    EXIT,
-    UNKNOWN
-};
+    enum class CommandCode
+    {
+        MKDIR,
+        LS,
+        CD,
+        TOUCH,
+        RM,
+        CAT,
+        HELP,
+        EXIT,
+        UNKNOWN
+    };
+
+}
+
+using namespace vfs;
+using namespace std;
 
 int main()
 {
     FileSystem fs;
-    Validator INPUT_VALIDATOR;
 
     map<string, CommandCode> commandMap = {
         {"mkdir", CommandCode::MKDIR},
@@ -50,14 +57,16 @@ int main()
 
     string userChoice;
 
-    displayCurrentPath(fs.getCWD_S()->buildAncestorsList(fs.getCWD()));
+    const auto cur_path_ = fs.getCWD_S()->buildAncestorsList(fs.getCWD());
+    displayCurrentPath(cur_path_);
     while (code != CommandCode::EXIT && getline(cin, userChoice))
     {
         vector<string> parts = parseInputs(userChoice, ' ');
-        if (!INPUT_VALIDATOR.syntaxCheckerInput(parts))
+        auto syntaxCheck = Validator::syntaxCheckerInput(parts);
+        if (syntaxCheck.isErr())
         {
-            displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
-            displayCurrentPath(fs.getCWD_S()->buildAncestorsList(fs.getCWD()));
+            displayError(syntaxCheck.unwrapErr().message, syntaxCheck.unwrapErr().suggestion);
+            displayCurrentPath(cur_path_);
             continue;
         }
 
@@ -71,9 +80,10 @@ int main()
         {
         case CommandCode::MKDIR:
         {
-            if (!INPUT_VALIDATOR.syntaxCheckerMKDIR(args))
+            auto syntaxCheck_mkdir_ = Validator::syntaxCheckerMKDIR(args);
+            if (syntaxCheck_mkdir_.isErr())
             {
-                displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                displayError(syntaxCheck_mkdir_.unwrapErr().message, syntaxCheck_mkdir_.unwrapErr().suggestion);
                 break;
             }
             for (string str : args)
@@ -81,20 +91,31 @@ int main()
                 vector<string> parts = parseInputs(str, '/');
                 vector<string> destinationPath(parts.begin(), parts.end() - 1);
                 string folderName = parts.back();
-                shared_ptr<virtualFolder> destination = fs.traverseTree_S(destinationPath.empty() ? "." : joinStrings(destinationPath, '/'), INPUT_VALIDATOR);
-                if (destination == nullptr)
+
+                string input = destinationPath.empty() ? "." : joinStrings(destinationPath, '/');
+
+                auto traverseTree_ = fs.traverseTree_S(input);
+                if (traverseTree_.isErr())
                 {
-                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    displayError(traverseTree_.unwrapErr().message, traverseTree_.unwrapErr().suggestion);
                     continue;
                 }
-                if (!INPUT_VALIDATOR.isValidName(folderName))
+
+                shared_ptr<virtualFolder> destination = traverseTree_.unwrap();
+
+                auto isValidName_ = Validator::isValidName(folderName);
+                if (isValidName_.isErr())
                 {
-                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    displayError(isValidName_.unwrapErr().message, isValidName_.unwrapErr().suggestion);
                     continue;
                 }
-                if (destination->createFolder(folderName, INPUT_VALIDATOR) == nullptr)
+
+                auto createdFolder_ = destination->createFolder(folderName);
+                if (createdFolder_.isErr())
                 {
-                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    displayError(
+                        createdFolder_.unwrapErr().message,
+                        createdFolder_.unwrapErr().suggestion);
                 }
                 else
                 {
@@ -114,30 +135,30 @@ int main()
             else if (args.size() == 1)
             {
                 // Case 2: 'ls FolderA'
-                destination = fs.traverseTree_S(args[0], INPUT_VALIDATOR);
-                if (destination != nullptr)
+                auto traverseTree_ = fs.traverseTree_S(args[0]);
+                destination = fs.traverseTree_S(args[0]).unwrap();
+                if (traverseTree_.isErr())
                 {
-                    handlelistContents(destination->getContentNames());
+                    displayError(
+                        traverseTree_.unwrapErr().message,
+                        traverseTree_.unwrapErr().suggestion);
                 }
-                else
-                {
-                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
-                }
+                handlelistContents(destination->getContentNames());
             }
             else if (args.size() > 1)
             {
                 for (size_t i = 0; i < args.size(); i++)
                 {
-                    destination = fs.traverseTree_S(args[i], INPUT_VALIDATOR);
-                    if (destination == nullptr)
+                    auto traverseTree_ = fs.traverseTree_S(args[i]);
+                    if (traverseTree_.isErr())
                     {
-                        displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                        displayError(
+                            traverseTree_.unwrapErr().message,
+                            traverseTree_.unwrapErr().suggestion);
                         continue;
                     }
-                    else
-                    {
-                        multipleLists[args[i]] = destination->getContentNames();;
-                    }
+                    destination = traverseTree_.unwrap();
+                    multipleLists[args[i]] = destination->getContentNames();
                 }
             }
             if (!multipleLists.empty())
@@ -152,21 +173,28 @@ int main()
             {
                 args.push_back("~");
             }
-            shared_ptr<virtualFolder> destination = fs.traverseTree_S(args[0], INPUT_VALIDATOR);
-            if(destination == nullptr){
-                displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+            auto traverseTree_ = fs.traverseTree_S(args[0]);
+            if (traverseTree_.isErr())
+            {
+                displayError(
+                    traverseTree_.unwrapErr().message,
+                    traverseTree_.unwrapErr().suggestion);
                 break;
             }
+            shared_ptr<virtualFolder> destination = traverseTree_.unwrap();
             fs.setCWD(destination);
-        }   
+        }
         break;
         case CommandCode::TOUCH:
         {
             vector<string> rn;
             shared_ptr<virtualFolder> destination;
-            if (!INPUT_VALIDATOR.syntaxCheckerTOUCH(args))
+            auto syntaxCheck_touch_ = Validator::syntaxCheckerTOUCH(args);
+            if (syntaxCheck_touch_.isErr())
             {
-                displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                displayError(
+                    syntaxCheck_touch_.unwrapErr().message,
+                    syntaxCheck_touch_.unwrapErr().suggestion);
                 break;
             }
             for (string str : args)
@@ -175,22 +203,34 @@ int main()
                 vector<string> destinationPath(parts.begin(), parts.end() - 1);
                 string fileName = parts.back();
 
-                shared_ptr<virtualFolder> destination = fs.traverseTree_S(destinationPath.empty() ? "." : joinStrings(destinationPath, '/'), INPUT_VALIDATOR);
+                string input = destinationPath.empty() ? "." : joinStrings(destinationPath, '/');
+                auto traverseTree_ = fs.traverseTree_S(input);
 
-                if (destination == nullptr)
+                if (traverseTree_.isErr())
                 {
-                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    displayError(
+                        traverseTree_.unwrapErr().message,
+                        traverseTree_.unwrapErr().suggestion);
                     continue;
                 }
-                if (!INPUT_VALIDATOR.isValidFileName(fileName))
+                shared_ptr<virtualFolder> destination = traverseTree_.unwrap();
+
+                auto isValidFileName_ = Validator::isValidFileName(fileName);
+                if (isValidFileName_.isErr())
                 {
-                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    displayError(
+                        isValidFileName_.unwrapErr().message,
+                        isValidFileName_.unwrapErr().suggestion);
                     continue;
                 }
                 rn = parseInputs(fileName, '.');
-                if (destination->createFile("", fileName, rn[1], INPUT_VALIDATOR) == nullptr)
+                auto createdFile_ = destination->createFile("", fileName, rn[1]);
+                if (createdFile_.isErr())
                 {
-                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    displayError(
+                        createdFile_.unwrapErr().message,
+                        createdFile_.unwrapErr().suggestion);
+                    continue;
                 }
                 else
                 {
@@ -201,7 +241,6 @@ int main()
         break;
         case CommandCode::RM:
         {
-            vector<string> rn;
             shared_ptr<virtualFolder> destination;
             for (string str : args)
             {
@@ -209,21 +248,35 @@ int main()
                 vector<string> destinationPath(parts.begin(), parts.end() - 1);
                 string fileName = parts.back();
 
-                shared_ptr<virtualFolder> destination = fs.traverseTree_S(destinationPath.empty() ? "." : joinStrings(destinationPath, '/'), INPUT_VALIDATOR);
+                string input = destinationPath.empty() ? "." : joinStrings(destinationPath, '/');
+                auto traverseTree_ = fs.traverseTree_S(input);
+                if (traverseTree_.isErr())
+                {
+                    displayError(
+                        traverseTree_.unwrapErr().message,
+                        traverseTree_.unwrapErr().suggestion);
+                    continue;
+                }
 
-                if (destination == nullptr)
+                destination = traverseTree_.unwrap();
+
+                auto filePtr_ = destination->getPointerFromNameAsFile(fileName);
+                if (filePtr_.isErr())
                 {
-                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    displayError(
+                        filePtr_.unwrapErr().message,
+                        filePtr_.unwrapErr().suggestion);
                     continue;
                 }
-                shared_ptr<virtualFile> filePtr = destination->getPointerFromNameAsFile(fileName, INPUT_VALIDATOR);
-                if(filePtr == nullptr){
-                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
-                    continue;
-                }
-                if (!destination->removeFile(filePtr, INPUT_VALIDATOR))
+                shared_ptr<virtualFile> filePtr = filePtr_.unwrap();
+
+                auto removedFile_ = destination->removeFile(filePtr);
+                if (removedFile_.isErr())
                 {
-                    displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
+                    displayError(
+                        removedFile_.unwrapErr().message,
+                        removedFile_.unwrapErr().suggestion);
+                    continue;
                 }
                 else
                 {
@@ -231,12 +284,11 @@ int main()
                 }
             }
         }
-            break;
+        break;
         case CommandCode::CAT:
         {
-            
         }
-            break;
+        break;
         case CommandCode::HELP:
             break;
         case CommandCode::EXIT:

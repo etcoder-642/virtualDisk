@@ -5,30 +5,24 @@
 #include <iostream>
 #include <vector>
 
-using namespace std;
+#include "error/error.h"
+#include "error/result.h"
 
+namespace vfs
+{
+    class Validator
+    {
+    private:
+        static std::vector<std::string> allCommands;
 
-class Validator {
-private:
-    string ERROR_MESSAGE;
-    string SUGGESTION;
-    static vector<string> allCommands;
-public:
-    Validator() : ERROR_MESSAGE("Invalid input. Please try again.") {}
-    string getErrorMessage() { return ERROR_MESSAGE; }
-    string getSuggestion() { return SUGGESTION; }
-    void setErrorMessage(string message) { ERROR_MESSAGE = message; }
-    void setSuggestion(string suggestion) { SUGGESTION = suggestion; }
-    void clearErrorMessage() { ERROR_MESSAGE = ""; }
-
-    bool checkEmpty(vector<string> list);
-    bool isValidName(const string& name);
-    bool syntaxCheckerMKDIR(vector<string>& str);
-    bool syntaxCheckerInput(vector<string>& str);
-    bool syntaxCheckerTOUCH(vector<string>& str);
-    bool isValidFileName(string str);
-};
-
-
+    public:
+        static Result<void> checkEmpty(const std::vector<std::string> list);
+        static Result<void> isValidName(const std::string &name);
+        static Result<void> syntaxCheckerMKDIR(std::vector<std::string> &str);
+        static Result<void> syntaxCheckerInput(std::vector<std::string> &str);
+        static Result<void> syntaxCheckerTOUCH(std::vector<std::string> &str);
+        static Result<void> isValidFileName(std::string str);
+    };
+}
 
 #endif // VALIDATION_H

@@ -4,58 +4,66 @@
 #include <string>
 #include <map>
 
-using namespace std;
+#include "../include/display.h"
 
-void initialPage()
-{
-    cout << string(80, '=') << endl;
-    cout << "====================== VIRTUAL DISK ===========================================" << endl;
-    cout << "Hint: Type 'help' to see a list of disk operations (mkdir, ls, cd)." << endl;
-    cout << string(80, '-') << endl;
-    // cout << "~/home$ ";
-    // getline(cin, userChoice);
-    cout << endl;
-}
+    using namespace std;
 
-void handlelistContents(vector<string> names)
+namespace vfs
 {
-    cout << string(80, '-') << endl;
-    for (size_t i = 0; i < names.size(); i++)
+
+    void initialPage()
     {
-        cout << names[i] << " ";
-    }
-    cout << endl << string(80, '-') << endl;
-}
-
-void handleMultipleListContents(map<string, vector<string>> multipleLists)
-{
-    for(auto const& element: multipleLists)
-    {
-        string key = element.first;
-        vector<string> value = element.second;
-        cout << key << ":" << endl;
-        handlelistContents(value);
+        cout << string(80, '=') << endl;
+        cout << "====================== VIRTUAL DISK ===========================================" << endl;
+        cout << "Hint: Type 'help' to see a list of disk operations (mkdir, ls, cd)." << endl;
+        cout << string(80, '-') << endl;
+        // cout << "~/home$ ";
+        // getline(cin, userChoice);
         cout << endl;
     }
-}
 
-void displaySpecialMessage(string message)
-{
-    cout << message << endl;
-}
-
-void displayCurrentPath(vector<string> ancestors)
-{
-    string path = "~";
-    for (string ancestor : ancestors)
+    void handlelistContents(const vector<string> &names)
     {
-        path += "/" + ancestor;
+        cout << string(80, '-') << endl;
+        for (size_t i = 0; i < names.size(); i++)
+        {
+            cout << names[i] << " ";
+        }
+        cout << endl
+             << string(80, '-') << endl;
     }
-    cout << path << "$ ";
-}
 
-void displayError(string str, string suggestion)
-{
-    cout << str << endl;
-    cout << suggestion << endl;
+    void handleMultipleListContents(const map<string, vector<string>> &multipleLists)
+    {
+        for (auto const &element : multipleLists)
+        {
+            string key = element.first;
+            const vector<string> &value = element.second;
+            cout << key << ":" << endl;
+            handlelistContents(value);
+            cout << endl;
+        }
+    }
+
+    void displaySpecialMessage(const string &message)
+    {
+        cout << message << endl;
+    }
+
+    void displayCurrentPath(const vector<string> &ancestors)
+    {
+        string path = "~";
+        for (string ancestor : ancestors)
+        {
+            path += "/" + ancestor;
+        }
+        cout << path << "$ ";
+    }
+
+    void displayError(const string &str, const string &suggestion)
+    {
+        cout << str << endl;
+        cout << suggestion << endl;
+    }
+
 }

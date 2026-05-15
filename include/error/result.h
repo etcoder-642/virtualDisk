@@ -10,7 +10,7 @@
 #include "error.h"
 
 
-namespace fs {
+namespace vfs {
 
     template<typename T>
     class Result {

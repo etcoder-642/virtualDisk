@@ -5,8 +5,10 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-vector<string> parseInputs(string input, char identifier);
-string joinStrings(const vector<string>& input, char identifier);
+namespace vfs
+{
+    std::vector<std::string> parseInputs(std::string & input, char identifier);
+    std::string joinStrings(const std::vector<std::string> &input, char identifier);
+}
 
 #endif

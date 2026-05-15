@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace fs {
+namespace vfs {
     struct FSError;
 
     struct FSError {
