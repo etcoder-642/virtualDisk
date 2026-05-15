@@ -221,4 +221,4 @@ This pattern makes all failure paths visible at the call site with zero silent f
 ## Author
 
 [Manasseh Samuel](https://github.com/etcoder-642)
-Building toward a remote systems/infrastructure role through open source and real project work.
+Aspiring Systems Engineer.
