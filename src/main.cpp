@@ -152,11 +152,12 @@ int main()
             {
                 args.push_back("~");
             }
-            if(fs.traverseTree_S(args[0], INPUT_VALIDATOR) == nullptr){
+            shared_ptr<virtualFolder> destination = fs.traverseTree_S(args[0], INPUT_VALIDATOR);
+            if(destination == nullptr){
                 displayError(INPUT_VALIDATOR.getErrorMessage(), INPUT_VALIDATOR.getSuggestion());
                 break;
             }
-            fs.setCWD(fs.traverseTree_S(args[0], INPUT_VALIDATOR));
+            fs.setCWD(destination);
         }   
         break;
         case CommandCode::TOUCH:
@@ -232,6 +233,9 @@ int main()
         }
             break;
         case CommandCode::CAT:
+        {
+            
+        }
             break;
         case CommandCode::HELP:
             break;
