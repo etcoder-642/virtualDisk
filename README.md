@@ -4,6 +4,39 @@ An in-memory filesystem, simulating a Unix-like directory structure with a termi
 
 ---
 
+## Why am I building this?
+
+This project exists because ForgeDB needs more than just a storage engine.
+
+Block_storage_engine handles the low-level stuff: blocks, inodes, bitmaps, the raw disk
+layout. But before data ever hits disk, something needs to manage the filesystem layer
+above it. The in-memory tree, the working directory, path traversal, the actual
+`mkdir /assets/textures` kind of logic. That's what VirtualDisk is.
+
+Think of it this way: when you type a path into your terminal, your OS isn't going
+straight to disk for every single operation. There's a layer in memory representing where
+you are, what exists, and how things are connected. VirtualDisk builds that layer from
+scratch.
+
+It's a fully navigable filesystem that lives entirely in RAM. No disk reads, no I/O.
+Just a tree of files and folders you can create, remove, navigate, and traverse using
+real Unix-style commands. It even has its own terminal interface so you can actually
+use it, not just test it programmatically.
+
+The reason I'm building it as a separate project instead of just embedding it into BSE
+is that it forced me to get the design right in isolation. No block layout to worry
+about, no serialization concerns. Just: what does a filesystem actually look like as a
+data structure? How do you handle paths cleanly? How do you make every failure
+visible without drowning in exceptions?
+
+Once VirtualDisk and block_storage_engine are integrated, that combined layer becomes
+the foundation ForgeDB sits on. VirtualDisk handles the in-memory tree and path
+semantics. BSE handles persistence. ForgeDB exposes the whole thing as one clean
+embeddable library.
+
+This is the middle piece.
+
+
 ## Overview
 
 VirtualDisk creates a fully navigable filesystem in memory — no disk I/O involved. It supports creating, listing, removing, and navigating files and folders through a command-line terminal interface, mimicking the behavior of a real Unix shell.
@@ -204,7 +237,7 @@ This pattern makes all failure paths visible at the call site with zero silent f
 
 ## Planned
 
-- Persist filesystem state to disk via integration with [BlockStorageEngine](https://github.com/ercoder-642/block_storage_engine) — a separate Unix-like block storage project implementing superblocks, inodes, and bitmaps
+- Persist filesystem state to disk via integration with [BlockStorageEngine](https://github.com/etcoder-642/block_storage_engine) — a separate Unix-like block storage project implementing superblocks, inodes, and bitmaps
 - implement additional commands like `cat`, `mv`, `cp`, `rmdir`
 - File content editing
 
