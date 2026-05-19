@@ -7,6 +7,7 @@ An in-memory filesystem, simulating a Unix-like directory structure with a termi
 ## Why am I building this?
 
 This project exists because ForgeDB needs more than just a storage engine.
+[see block storage engine to see what forgeDB is.](https://github.com/etcoder-642/block_storage_engine)
 
 Block_storage_engine handles the low-level stuff: blocks, inodes, bitmaps, the raw disk
 layout. But before data ever hits disk, something needs to manage the filesystem layer
